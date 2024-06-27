@@ -1,0 +1,94 @@
+platform :ios, '13.0'
+source 'https://github.com/CocoaPods/Specs.git'
+#use_modular_headers!
+
+pod 'Firebase', :modular_headers => true
+pod 'FirebaseCore', :modular_headers => true
+pod 'FirebaseRemoteConfig', :modular_headers => true
+pod 'FirebaseABTesting', :modular_headers => true
+pod 'FirebaseCoreExtension', :modular_headers => true
+pod 'FirebaseInstallations', :modular_headers => true
+pod 'GoogleDataTransport', :modular_headers => true
+pod 'GoogleUtilities', :modular_headers => true
+pod 'nanopb', :modular_headers => true
+
+install! 'cocoapods', :deterministic_uuids => false
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+# Prevent Cocoapods from collecting stats, which adds time to each pod installation
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+target 'PriceWidgetExtension' do
+  pod 'swift-vibrant'
+end
+
+target 'SelectTokenIntent' do
+  pod 'swift-vibrant'
+end
+
+target 'ImageNotification' do
+  pod 'Firebase/Messaging', :modular_headers => true
+end
+
+target 'Rainbow' do
+
+  # Pods for Rainbow
+  config = use_native_modules!
+
+  # Flags change depending on the env values.
+  flags = get_default_flags()
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # to enable hermes on iOS, change `false` to `true` and then install pods
+    :hermes_enabled => ENV['USE_HERMES'] != 'NO',
+    :fabric_enabled => flags[:fabric_enabled],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+  pod 'swift-vibrant'
+
+  # Rainbow's Internal Modules.
+  pod 'Rainbow-Internals', :path => './Internals'
+
+  pod 'FLAnimatedImage'
+  pod 'libwebp'
+  pod 'RNInputMask', :path => '../node_modules/react-native-text-input-mask/ios/InputMask'
+
+  permissions_path = '../node_modules/react-native-permissions/ios'
+  pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
+  pod 'Permission-FaceID', :path => "#{permissions_path}/FaceID"
+  pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
+  pod "PanModal", :git => 'https://github.com/rainbow-me/PanModal', :commit => 'ab97d74279ba28c2891b47a5dc767ed4dd7cf994'
+  pod 'Shimmer'
+  pod 'RNExitApp', :path => '../node_modules/react-native-exit-app'
+  pod 'SRSRadialGradient', :path => '../node_modules/react-native-radial-gradient/ios'
+  pod 'react-native-palette-full', :path => '../node_modules/react-native-palette-full'
+  pod 'react-native-ble-plx', :path => '../node_modules/react-native-ble-plx'
+  pod 'TOCropViewController', '2.7.3'
+
+  use_native_modules!
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      # Set `mac_catalyst_enabled` to `true` in order to apply patches
+      # necessary for Mac Catalyst builds
+      :mac_catalyst_enabled => false
+    )
+    # This is necessary for Xcode 14, because it signs resource bundles by default when building for devices.
+    installer.target_installation_results.pod_target_installation_results.each do |pod_name, target_installation_result|
+      target_installation_result.resource_bundle_targets.each do |resource_bundle_target|
+        resource_bundle_target.build_configurations.each do |config|
+          config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+        end
+      end
+    end
+    installer.pods_project.build_configurations.each do |config|
+      __apply_Xcode_12_5_M1_post_install_workaround(installer)
+      config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+    end
+  end
+end
