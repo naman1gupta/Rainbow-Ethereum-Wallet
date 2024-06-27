@@ -1,3 +1,0 @@
-export const EMOJIS_CONTAINER_HORIZONTAL_MARGIN = 10;
-export const EMOJIS_TOP_OFFSET = 35;
-export const EMOJI_FONT_SIZE_OFFSET = ios ? 15 : 22;

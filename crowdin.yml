@@ -1,5 +1,0 @@
-files:
-  - source: /src/languages/en_US.json
-    translation: /src/languages/%locale_with_underscore%.json
-bundles:
-  - 2

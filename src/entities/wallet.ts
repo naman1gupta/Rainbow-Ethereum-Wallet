@@ -1,1 +1,0 @@
-export type EthereumAddress = string;
